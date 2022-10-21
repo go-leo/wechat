@@ -105,6 +105,10 @@ func NewSDK(opts ...Option) *SDK {
 	return &SDK{o: o}
 }
 
+func (sdk *SDK) AppID() string {
+	return sdk.o.appid
+}
+
 func (sdk *SDK) Auth() *auth.SDK {
 	return &auth.SDK{
 		HttpCli:              sdk.o.httpCli,
