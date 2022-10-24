@@ -124,6 +124,7 @@ func (sdk *SDK) Auth() *auth.SDK {
 
 func (sdk *SDK) SubMsg() *submsg.SDK {
 	return &submsg.SDK{
-		AppID: sdk.o.appid,
+		HttpCli: sdk.o.httpCli,
+		AppID:   sdk.o.appid,
 	}
 }
