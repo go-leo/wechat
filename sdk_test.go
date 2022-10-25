@@ -12,9 +12,7 @@ import (
 )
 
 const appid = ""
-
 const secret = ""
-
 const redisaddr = ""
 const redispwd = ""
 

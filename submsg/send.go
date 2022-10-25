@@ -3,7 +3,6 @@ package submsg
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/go-leo/netx/httpx"
 
@@ -32,24 +31,15 @@ type Msg struct {
 
 // Send 发送订阅消息
 func (sm *SDK) Send(ctx context.Context, accessToken string, msg *Msg) (*SendResp, error) {
-	req, err := new(httpx.RequestBuilder).
+	var resp SendResp
+	err := new(httpx.RequestBuilder).
 		Post().
 		URLString(URLSend).
 		Query("access_token", accessToken).
 		JSONBody(msg).
-		Build(ctx)
+		Execute(ctx, sm.HttpCli).
+		JSONBody(&resp)
 	if err != nil {
-		return nil, err
-	}
-	helper := httpx.NewResponseHelper(sm.HttpCli.Do(req))
-	if helper.Err() != nil {
-		return nil, helper.Err()
-	}
-	if helper.StatusCode() != http.StatusOK {
-		return nil, fmt.Errorf("subscribeMessage.Send, uri=%v , statusCode=%v", req.URL, helper.StatusCode())
-	}
-	var resp SendResp
-	if err := helper.JSONBody(&resp); err != nil {
 		return nil, err
 	}
 	if resp.ErrCode != 0 {

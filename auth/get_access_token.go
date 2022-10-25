@@ -127,21 +127,16 @@ func (auth *SDK) decodeResp(result map[string]string) *GetAccessTokenResp {
 }
 
 func (auth *SDK) getAccessToken(ctx context.Context) (*GetAccessTokenResp, error) {
-	req, err := new(httpx.RequestBuilder).
+	var resp GetAccessTokenResp
+	err := httpx.NewRequestBuilder().
 		Get().
 		URLString(URLGetAccessToken).
 		Query("appid", auth.AppID).
 		Query("secret", auth.Secret).
-		Query("grant_type", "client_credential").Build(ctx)
+		Query("grant_type", "client_credential").
+		Execute(ctx, auth.HttpCli).
+		JSONBody(&resp)
 	if err != nil {
-		return nil, err
-	}
-	helper := httpx.NewResponseHelper(auth.HttpCli.Do(req))
-	if helper.Err() != nil {
-		return nil, helper.Err()
-	}
-	var resp GetAccessTokenResp
-	if err := helper.JSONBody(&resp); err != nil {
 		return nil, err
 	}
 	if resp.ErrCode != 0 {

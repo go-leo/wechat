@@ -3,7 +3,6 @@ package submsg
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"github.com/go-leo/netx/httpx"
 
@@ -31,23 +30,14 @@ type GetTemplateListResp struct {
 
 // GetTemplateList 获取当前帐号下的个人模板列表
 func (sm *SDK) GetTemplateList(ctx context.Context, accessToken string) (*GetTemplateListResp, error) {
-	req, err := new(httpx.RequestBuilder).
+	var resp GetTemplateListResp
+	err := new(httpx.RequestBuilder).
 		Get().
 		URLString(URLGetTemplateList).
 		Query("access_token", accessToken).
-		Build(ctx)
+		Execute(ctx, sm.HttpCli).
+		JSONBody(&resp)
 	if err != nil {
-		return nil, err
-	}
-	helper := httpx.NewResponseHelper(sm.HttpCli.Do(req))
-	if helper.Err() != nil {
-		return nil, helper.Err()
-	}
-	if helper.StatusCode() != http.StatusOK {
-		return nil, fmt.Errorf("subscribeMessage.GetTemplateList, uri=%v , statusCode=%v", req.URL, helper.StatusCode())
-	}
-	var resp GetTemplateListResp
-	if err := helper.JSONBody(&resp); err != nil {
 		return nil, err
 	}
 	if resp.ErrCode != 0 {
