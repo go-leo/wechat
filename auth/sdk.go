@@ -12,6 +12,7 @@ import (
 var (
 	URLCode2Session   = "https://api.weixin.qq.com/sns/jscode2session"
 	URLGetAccessToken = "https://api.weixin.qq.com/cgi-bin/token"
+	URLGetTicket      = "https://api.weixin.qq.com/cgi-bin/ticket/getticket"
 )
 
 type SDK struct {
@@ -22,5 +23,7 @@ type SDK struct {
 	RedisSync            *redsync.Redsync
 	AccessTokenKey       string
 	AccessTokenLockerKey string
+	TicketKey            string
+	TicketLockerKey      string
 	Logger               common.Logger
 }

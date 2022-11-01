@@ -37,14 +37,14 @@ func (auth *SDK) GetAccessToken(ctx context.Context) (*GetAccessTokenResp, error
 		expiresAt := time.Unix(timestamp, 0)
 		if expiresAt.After(time.Now()) {
 			// 没有过期，直接返回token信息
-			return auth.decodeResp(result), nil
+			return auth.decodeGetAccessTokenResp(result), nil
 		} else {
 			// 过期了，获取锁
 			mutex := auth.RedisSync.NewMutex(auth.AccessTokenLockerKey)
 			err := mutex.Lock()
 			if err != nil {
 				// 获取锁失败，直接返回token信息
-				return auth.decodeResp(result), nil
+				return auth.decodeGetAccessTokenResp(result), nil
 			}
 			defer func(mutex *redsync.Mutex) {
 				_, _ = mutex.Unlock()
@@ -54,11 +54,11 @@ func (auth *SDK) GetAccessToken(ctx context.Context) (*GetAccessTokenResp, error
 			tokenResp, err := auth.getAccessToken(ctx)
 			if err != nil {
 				auth.Logger.Errorf("failed to get access token from wechat, %v", err)
-				return auth.decodeResp(result), nil
+				return auth.decodeGetAccessTokenResp(result), nil
 			}
 
 			// 保存到redis
-			if err := auth.saveToRedis(ctx, tokenResp); err != nil {
+			if err := auth.saveGetAccessTokenRespToRedis(ctx, tokenResp); err != nil {
 				auth.Logger.Errorf("failed to save access token to redis, %v", err)
 				return tokenResp, nil
 			}
@@ -83,20 +83,21 @@ func (auth *SDK) GetAccessToken(ctx context.Context) (*GetAccessTokenResp, error
 		if mapx.IsEmpty(result) {
 			return nil, errors.New("failed to get access token")
 		}
-		return auth.decodeResp(result), nil
+		return auth.decodeGetAccessTokenResp(result), nil
 	}
 	defer func(mutex *redsync.Mutex) {
 		_, _ = mutex.Unlock()
 	}(mutex)
+
 	// 获取锁成功, 调微信的接口
 	tokenResp, err := auth.getAccessToken(ctx)
 	if err != nil {
 		auth.Logger.Errorf("failed to get access token from wechat, %v", err)
-		return auth.decodeResp(result), nil
+		return auth.decodeGetAccessTokenResp(result), nil
 	}
 
 	// 保存到redis
-	if err := auth.saveToRedis(ctx, tokenResp); err != nil {
+	if err := auth.saveGetAccessTokenRespToRedis(ctx, tokenResp); err != nil {
 		auth.Logger.Errorf("failed to save access token to redis, %v", err)
 		return tokenResp, nil
 	}
@@ -104,22 +105,22 @@ func (auth *SDK) GetAccessToken(ctx context.Context) (*GetAccessTokenResp, error
 
 }
 
-func (auth *SDK) saveToRedis(ctx context.Context, tokenResp *GetAccessTokenResp) error {
+func (auth *SDK) saveGetAccessTokenRespToRedis(ctx context.Context, tokenResp *GetAccessTokenResp) error {
 	data, _ := json.Marshal(tokenResp)
-	expiresIn := tokenResp.ExpiresIn * 2 / 3
-	expiresAt := time.Now().Add(time.Duration(expiresIn) * time.Second)
+	expiresIn := time.Duration(tokenResp.ExpiresIn) * time.Second
+	expiresAt := time.Now().Add(expiresIn * 2 / 3)
 	_, err := auth.RedisCli.HMSet(ctx, auth.AccessTokenKey, "resp", string(data), "expires_at", expiresAt.Unix()).Result()
 	if err != nil {
 		return err
 	}
-	_, err = auth.RedisCli.ExpireAt(ctx, auth.AccessTokenKey, expiresAt).Result()
+	_, err = auth.RedisCli.Expire(ctx, auth.AccessTokenKey, expiresIn).Result()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (auth *SDK) decodeResp(result map[string]string) *GetAccessTokenResp {
+func (auth *SDK) decodeGetAccessTokenResp(result map[string]string) *GetAccessTokenResp {
 	resp, _ := result["resp"]
 	authGetAccessTokenResp := &GetAccessTokenResp{}
 	_ = json.Unmarshal([]byte(resp), authGetAccessTokenResp)

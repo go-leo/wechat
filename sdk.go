@@ -23,6 +23,8 @@ type options struct {
 	redisSync            *redsync.Redsync
 	accessTokenKey       string
 	accessTokenLockerKey string
+	ticketKey            string
+	ticketLockerKey      string
 	logger               common.Logger
 }
 
@@ -44,6 +46,12 @@ func (o *options) init() {
 	}
 	if stringx.IsBlank(o.accessTokenLockerKey) {
 		o.accessTokenLockerKey = o.accessTokenKey + ":locker"
+	}
+	if stringx.IsBlank(o.ticketKey) {
+		o.ticketKey = "ticket:" + o.appid
+	}
+	if stringx.IsBlank(o.ticketLockerKey) {
+		o.ticketLockerKey = o.ticketKey + ":locker"
 	}
 	if o.logger == nil {
 		o.logger = &common.DefaultLogger{}
@@ -94,6 +102,18 @@ func AccessTokenLockerKey(key string) Option {
 	}
 }
 
+func TicketKey(key string) Option {
+	return func(o *options) {
+		o.ticketKey = key
+	}
+}
+
+func TicketLockerKey(key string) Option {
+	return func(o *options) {
+		o.ticketLockerKey = key
+	}
+}
+
 // SDK 微信小程序SDK
 type SDK struct {
 	o *options
@@ -119,6 +139,8 @@ func (sdk *SDK) Auth() *auth.SDK {
 		RedisSync:            sdk.o.redisSync,
 		AccessTokenKey:       sdk.o.accessTokenKey,
 		AccessTokenLockerKey: sdk.o.accessTokenLockerKey,
+		TicketKey:            sdk.o.ticketKey,
+		TicketLockerKey:      sdk.o.ticketLockerKey,
 		Logger:               sdk.o.logger,
 	}
 }

@@ -24,7 +24,7 @@ type GenerateReq struct {
 	// ExpireType 到期失效的 scheme 码失效类型，失效时间：0，失效间隔天数：1
 	ExpireType int `json:"expire_type"`
 	// ExpireTime 到期失效的 scheme 码的失效时间，为 Unix 时间戳。生成的到期失效 scheme 码在该时间前有效。最长有效期为30天。expire_type 为 0 时必填
-	ExpireTime int `json:"expire_time"`
+	ExpireTime int64 `json:"expire_time"`
 	// ExpireInterval 到期失效的 scheme 码的失效间隔天数。生成的到期失效 scheme 码在该间隔时间到达前有效。最长间隔天数为30天。 expire_type 为 1 时必填
 	ExpireInterval int `json:"expire_interval"`
 }
