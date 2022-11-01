@@ -31,7 +31,7 @@ type GenerateReq struct {
 
 type GenerateResp struct {
 	common.BaseResp
-	Openlink interface{} `json:"openlink"`
+	Openlink string `json:"openlink"`
 }
 
 // Generate 获取小程序 scheme 码，适用于短信、邮件、外部网页、微信内等拉起小程序的业务场景
