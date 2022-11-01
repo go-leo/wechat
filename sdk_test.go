@@ -9,12 +9,38 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/go-leo/wechat/submsg"
+	"github.com/go-leo/wechat/urlscheme"
 )
 
 const appid = ""
 const secret = ""
 const redisaddr = ""
 const redispwd = ""
+
+func TestSDKURLScheme(t *testing.T) {
+	sdk := NewSDK(
+		AppID(appid),
+		Secret(secret),
+		RedisClient(redis.NewClient(&redis.Options{
+			Addr:     redisaddr,
+			Password: redispwd,
+		})))
+	token, err := sdk.Auth().GetAccessToken(context.Background())
+	assert.NoError(t, err)
+	t.Log(token)
+	sendResp, err := sdk.URLScheme().Generate(context.Background(), token.AccessToken, &urlscheme.GenerateReq{
+		JumpWxa: &urlscheme.JumpWxa{
+			Path:       "/pages/index",
+			Query:      "id=1",
+			EnvVersion: "trial",
+		},
+		ExpireType:     1,
+		ExpireTime:     0,
+		ExpireInterval: 30,
+	})
+	assert.NoError(t, err)
+	t.Log(sendResp)
+}
 
 func TestSDKSubMsgSend(t *testing.T) {
 	sdk := NewSDK(
@@ -28,8 +54,8 @@ func TestSDKSubMsgSend(t *testing.T) {
 	assert.NoError(t, err)
 	t.Log(token)
 	sendResp, err := sdk.SubMsg().Send(context.Background(), token.AccessToken, &submsg.Msg{
-		ToUser:     "oSRk75c5l4Vr1pWBZrg9hPTwDZBs",
-		TemplateID: "I6rBMeQD18VrEI4pt8Ng5YLKOPqahr9JjpkwWtRs8jM",
+		ToUser:     "",
+		TemplateID: "",
 		Page:       fmt.Sprintf("/pages/player/index?id=%d&vId=%d", 1, 1),
 		Data: map[string]*submsg.DataItem{
 			"thing2": {Value: "标题"},

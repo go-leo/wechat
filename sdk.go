@@ -12,6 +12,7 @@ import (
 	"github.com/go-leo/wechat/auth"
 	"github.com/go-leo/wechat/common"
 	"github.com/go-leo/wechat/submsg"
+	"github.com/go-leo/wechat/urlscheme"
 )
 
 type options struct {
@@ -124,6 +125,13 @@ func (sdk *SDK) Auth() *auth.SDK {
 
 func (sdk *SDK) SubMsg() *submsg.SDK {
 	return &submsg.SDK{
+		HttpCli: sdk.o.httpCli,
+		AppID:   sdk.o.appid,
+	}
+}
+
+func (sdk *SDK) URLScheme() *urlscheme.SDK {
+	return &urlscheme.SDK{
 		HttpCli: sdk.o.httpCli,
 		AppID:   sdk.o.appid,
 	}
