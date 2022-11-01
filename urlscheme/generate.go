@@ -21,6 +21,8 @@ type JumpWxa struct {
 type GenerateReq struct {
 	// JumpWxa 跳转到的目标小程序信息。
 	JumpWxa *JumpWxa `json:"jump_wxa"`
+	// 默认值false。生成的 scheme 码类型，到期失效：true，永久有效：false。注意，永久有效 scheme 和有效时间超过180天的到期失效 scheme 的总数上限为10万个，详见获取 URL scheme，生成 scheme 码前请仔细确认。
+	IsExpire bool `json:"is_expire"`
 	// ExpireType 到期失效的 scheme 码失效类型，失效时间：0，失效间隔天数：1
 	ExpireType int32 `json:"expire_type"`
 	// ExpireTime 到期失效的 scheme 码的失效时间，为 Unix 时间戳。生成的到期失效 scheme 码在该时间前有效。最长有效期为30天。expire_type 为 0 时必填
