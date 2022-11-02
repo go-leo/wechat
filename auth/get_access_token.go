@@ -37,14 +37,14 @@ func (auth *SDK) GetAccessToken(ctx context.Context) (*GetAccessTokenResp, error
 		expiresAt := time.Unix(timestamp, 0)
 		if expiresAt.After(time.Now()) {
 			// 没有过期，直接返回token信息
-			return auth.decodeGetAccessTokenResp(result), nil
+			return auth.DecodeGetAccessTokenResp(result), nil
 		} else {
 			// 过期了，获取锁
 			mutex := auth.RedisSync.NewMutex(auth.AccessTokenLockerKey)
 			err := mutex.Lock()
 			if err != nil {
 				// 获取锁失败，直接返回token信息
-				return auth.decodeGetAccessTokenResp(result), nil
+				return auth.DecodeGetAccessTokenResp(result), nil
 			}
 			defer func(mutex *redsync.Mutex) {
 				_, _ = mutex.Unlock()
@@ -54,7 +54,7 @@ func (auth *SDK) GetAccessToken(ctx context.Context) (*GetAccessTokenResp, error
 			tokenResp, err := auth.getAccessToken(ctx)
 			if err != nil {
 				auth.Logger.Errorf("failed to get access token from wechat, %v", err)
-				return auth.decodeGetAccessTokenResp(result), nil
+				return auth.DecodeGetAccessTokenResp(result), nil
 			}
 
 			// 保存到redis
@@ -83,7 +83,7 @@ func (auth *SDK) GetAccessToken(ctx context.Context) (*GetAccessTokenResp, error
 		if mapx.IsEmpty(result) {
 			return nil, errors.New("failed to get access token")
 		}
-		return auth.decodeGetAccessTokenResp(result), nil
+		return auth.DecodeGetAccessTokenResp(result), nil
 	}
 	defer func(mutex *redsync.Mutex) {
 		_, _ = mutex.Unlock()
@@ -93,7 +93,7 @@ func (auth *SDK) GetAccessToken(ctx context.Context) (*GetAccessTokenResp, error
 	tokenResp, err := auth.getAccessToken(ctx)
 	if err != nil {
 		auth.Logger.Errorf("failed to get access token from wechat, %v", err)
-		return auth.decodeGetAccessTokenResp(result), nil
+		return auth.DecodeGetAccessTokenResp(result), nil
 	}
 
 	// 保存到redis
@@ -120,7 +120,7 @@ func (auth *SDK) saveGetAccessTokenRespToRedis(ctx context.Context, tokenResp *G
 	return nil
 }
 
-func (auth *SDK) decodeGetAccessTokenResp(result map[string]string) *GetAccessTokenResp {
+func (auth *SDK) DecodeGetAccessTokenResp(result map[string]string) *GetAccessTokenResp {
 	resp, _ := result["resp"]
 	authGetAccessTokenResp := &GetAccessTokenResp{}
 	_ = json.Unmarshal([]byte(resp), authGetAccessTokenResp)
