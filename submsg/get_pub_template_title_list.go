@@ -26,7 +26,7 @@ type GetPubTemplateTitleListResp struct {
 // GetPubTemplateTitleList 获取帐号所属类目下的公共模板标题
 func (sm *SDK) GetPubTemplateTitleList(ctx context.Context, accessToken string, ids []string, start int, limit int) (*GetPubTemplateTitleListResp, error) {
 	var resp GetPubTemplateTitleListResp
-	err := new(httpx.RequestBuilder).
+	err := httpx.NewRequestBuilder().
 		Get().
 		URLString(URLGetPubTemplateTitleList).
 		Query("access_token", accessToken).

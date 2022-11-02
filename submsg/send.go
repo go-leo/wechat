@@ -32,7 +32,7 @@ type Msg struct {
 // Send 发送订阅消息
 func (sm *SDK) Send(ctx context.Context, accessToken string, msg *Msg) (*SendResp, error) {
 	var resp SendResp
-	err := new(httpx.RequestBuilder).
+	err := httpx.NewRequestBuilder().
 		Post().
 		URLString(URLSend).
 		Query("access_token", accessToken).

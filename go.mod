@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/go-leo/backoffx v1.0.0
 	github.com/go-leo/mapx v1.0.2
-	github.com/go-leo/netx v1.0.7
+	github.com/go-leo/netx v1.0.9
 	github.com/go-leo/stringx v1.0.0
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-redsync/redsync/v4 v4.6.0

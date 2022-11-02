@@ -2,9 +2,7 @@ package urlscheme
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/go-leo/netx/httpx"
 
@@ -41,18 +39,11 @@ type GenerateResp struct {
 // Generate 获取小程序 scheme 码，适用于短信、邮件、外部网页、微信内等拉起小程序的业务场景
 func (sm *SDK) Generate(ctx context.Context, accessToken string, req *GenerateReq) (*GenerateResp, error) {
 	var resp GenerateResp
-
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
-	body := string(data)
-	body = strings.Replace(body, `\u0026`, "&", -1)
-	err = new(httpx.RequestBuilder).
+	err := httpx.NewRequestBuilder().
 		Post().
 		URLString(URLGenerate).
 		Query("access_token", accessToken).
-		TextBody(body, "application/json").
+		JSONBody(req).
 		Execute(ctx, sm.HttpCli).
 		JSONBody(&resp)
 	if err != nil {

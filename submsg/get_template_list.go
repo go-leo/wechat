@@ -31,7 +31,7 @@ type GetTemplateListResp struct {
 // GetTemplateList 获取当前帐号下的个人模板列表
 func (sm *SDK) GetTemplateList(ctx context.Context, accessToken string) (*GetTemplateListResp, error) {
 	var resp GetTemplateListResp
-	err := new(httpx.RequestBuilder).
+	err := httpx.NewRequestBuilder().
 		Get().
 		URLString(URLGetTemplateList).
 		Query("access_token", accessToken).
