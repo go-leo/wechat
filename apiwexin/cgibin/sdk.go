@@ -1,4 +1,4 @@
-package cigbin
+package cgibin
 
 import (
 	"net/http"
