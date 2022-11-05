@@ -1,4 +1,4 @@
-package urlscheme
+package wxa
 
 import "net/http"
 

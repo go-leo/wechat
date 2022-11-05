@@ -1,4 +1,4 @@
-package auth
+package ticket
 
 import (
 	"context"
@@ -23,8 +23,8 @@ type GetTicketResp struct {
 }
 
 func (auth *SDK) GetTicket(ctx context.Context, accessToken string, typ string) (*GetTicketResp, error) {
-	key := auth.TicketKey + ":" + typ
-	lockerKey := auth.TicketLockerKey + ":" + typ
+	key := auth.GetTicketKey + ":" + typ
+	lockerKey := auth.GetTicketLockerKey + ":" + typ
 	result, err := auth.RedisCli.HGetAll(ctx, key).Result()
 	if err != nil {
 		return nil, err
@@ -36,28 +36,28 @@ func (auth *SDK) GetTicket(ctx context.Context, accessToken string, typ string) 
 		expiresAt := time.Unix(timestamp, 0)
 		if expiresAt.After(time.Now()) {
 			// 没有过期，直接返回token信息
-			return auth.decodeGetTicketResp(result), nil
+			return auth.DecodeGetTicketResp(result), nil
 		} else {
 			// 过期了，获取锁
 			mutex := auth.RedisSync.NewMutex(lockerKey)
 			err := mutex.Lock()
 			if err != nil {
 				// 获取锁失败，直接返回token信息
-				return auth.decodeGetTicketResp(result), nil
+				return auth.DecodeGetTicketResp(result), nil
 			}
 			defer func(mutex *redsync.Mutex) {
 				_, _ = mutex.Unlock()
 			}(mutex)
 
 			// 获取锁成功, 调微信的接口
-			ticketResp, err := auth.getTicket(ctx, accessToken, typ)
+			ticketResp, err := auth.CallGetTicket(ctx, accessToken, typ)
 			if err != nil {
 				auth.Logger.Errorf("failed to get access token from wechat, %v", err)
-				return auth.decodeGetTicketResp(result), nil
+				return auth.DecodeGetTicketResp(result), nil
 			}
 
 			// 保存到redis
-			if err := auth.saveGetTicketRespToRedis(ctx, key, ticketResp); err != nil {
+			if err := auth.SaveGetTicketRespToRedis(ctx, key, ticketResp); err != nil {
 				auth.Logger.Errorf("failed to save access token to redis, %v", err)
 				return ticketResp, nil
 			}
@@ -82,28 +82,28 @@ func (auth *SDK) GetTicket(ctx context.Context, accessToken string, typ string) 
 		if mapx.IsEmpty(result) {
 			return nil, errors.New("failed to get ticket")
 		}
-		return auth.decodeGetTicketResp(result), nil
+		return auth.DecodeGetTicketResp(result), nil
 	}
 	defer func(mutex *redsync.Mutex) {
 		_, _ = mutex.Unlock()
 	}(mutex)
 
 	// 获取锁成功, 调微信的接口
-	tokenResp, err := auth.getTicket(ctx, accessToken, typ)
+	tokenResp, err := auth.CallGetTicket(ctx, accessToken, typ)
 	if err != nil {
 		auth.Logger.Errorf("failed to get ticket from wechat, %v", err)
-		return auth.decodeGetTicketResp(result), nil
+		return auth.DecodeGetTicketResp(result), nil
 	}
 
 	// 保存到redis
-	if err := auth.saveGetTicketRespToRedis(ctx, key, tokenResp); err != nil {
+	if err := auth.SaveGetTicketRespToRedis(ctx, key, tokenResp); err != nil {
 		auth.Logger.Errorf("failed to save access token to redis, %v", err)
 		return tokenResp, nil
 	}
 	return tokenResp, nil
 }
 
-func (auth *SDK) saveGetTicketRespToRedis(ctx context.Context, key string, tokenResp *GetTicketResp) error {
+func (auth *SDK) SaveGetTicketRespToRedis(ctx context.Context, key string, tokenResp *GetTicketResp) error {
 	data, _ := json.Marshal(tokenResp)
 	expiresIn := tokenResp.ExpiresIn * 2 / 3
 	expiresAt := time.Now().Add(time.Duration(expiresIn) * time.Second)
@@ -118,14 +118,14 @@ func (auth *SDK) saveGetTicketRespToRedis(ctx context.Context, key string, token
 	return nil
 }
 
-func (auth *SDK) decodeGetTicketResp(result map[string]string) *GetTicketResp {
+func (auth *SDK) DecodeGetTicketResp(result map[string]string) *GetTicketResp {
 	resp, _ := result["resp"]
 	getTicketResp := &GetTicketResp{}
 	_ = json.Unmarshal([]byte(resp), getTicketResp)
 	return getTicketResp
 }
 
-func (auth *SDK) getTicket(ctx context.Context, accessToken string, typ string) (*GetTicketResp, error) {
+func (auth *SDK) CallGetTicket(ctx context.Context, accessToken string, typ string) (*GetTicketResp, error) {
 	var resp GetTicketResp
 	err := httpx.NewRequestBuilder().
 		Get().
@@ -138,7 +138,7 @@ func (auth *SDK) getTicket(ctx context.Context, accessToken string, typ string) 
 		return nil, err
 	}
 	if resp.ErrCode != 0 {
-		err = fmt.Errorf("auth.GetAccessToken error : errcode=%v , errmsg=%v", resp.ErrCode, resp.ErrMsg)
+		err = fmt.Errorf("auth.Token error : errcode=%v , errmsg=%v", resp.ErrCode, resp.ErrMsg)
 		return nil, err
 	}
 	return &resp, nil

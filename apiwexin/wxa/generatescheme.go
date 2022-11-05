@@ -1,4 +1,4 @@
-package urlscheme
+package wxa
 
 import (
 	"context"
@@ -18,7 +18,7 @@ type JumpWxa struct {
 	EnvVersion string `json:"env_version"`
 }
 
-type GenerateReq struct {
+type GenerateSchemeReq struct {
 	// JumpWxa 跳转到的目标小程序信息。
 	JumpWxa *JumpWxa `json:"jump_wxa"`
 	// 默认值false。生成的 scheme 码类型，到期失效：true，永久有效：false。注意，永久有效 scheme 和有效时间超过180天的到期失效 scheme 的总数上限为10万个，详见获取 URL scheme，生成 scheme 码前请仔细确认。
@@ -31,14 +31,14 @@ type GenerateReq struct {
 	ExpireInterval int32 `json:"expire_interval"`
 }
 
-type GenerateResp struct {
+type GenerateSchemeResp struct {
 	common.BaseResp
 	Openlink string `json:"openlink"`
 }
 
-// Generate 获取小程序 scheme 码，适用于短信、邮件、外部网页、微信内等拉起小程序的业务场景
-func (sm *SDK) Generate(ctx context.Context, accessToken string, req *GenerateReq) (*GenerateResp, error) {
-	var resp GenerateResp
+// GenerateScheme 获取小程序 scheme 码，适用于短信、邮件、外部网页、微信内等拉起小程序的业务场景
+func (sm *SDK) GenerateScheme(ctx context.Context, accessToken string, req *GenerateSchemeReq) (*GenerateSchemeResp, error) {
+	var resp GenerateSchemeResp
 	err := httpx.NewRequestBuilder().
 		Post().
 		URLString(URLGenerate).
@@ -50,7 +50,7 @@ func (sm *SDK) Generate(ctx context.Context, accessToken string, req *GenerateRe
 		return nil, err
 	}
 	if resp.ErrCode != 0 {
-		err = fmt.Errorf("urlscheme.Generate error : errcode=%v , errmsg=%v", resp.ErrCode, resp.ErrMsg)
+		err = fmt.Errorf("wxa.GenerateScheme error : errcode=%v , errmsg=%v", resp.ErrCode, resp.ErrMsg)
 		return nil, err
 	}
 	resp.AppID = sm.AppID

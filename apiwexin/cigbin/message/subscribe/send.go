@@ -1,4 +1,4 @@
-package submsg
+package subscribe
 
 import (
 	"context"

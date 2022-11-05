@@ -1,4 +1,4 @@
-package submsg
+package newtmpl
 
 import (
 	"context"
