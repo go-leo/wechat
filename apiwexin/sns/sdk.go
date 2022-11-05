@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	URLCode2Session = "https://api.weixin.qq.com/sns/jscode2session"
+	URLJsCode2Session = "https://api.weixin.qq.com/sns/jscode2session"
 )
 
 type SDK struct {
