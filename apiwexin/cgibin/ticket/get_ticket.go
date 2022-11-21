@@ -75,14 +75,7 @@ func (auth *SDK) GetTicket(ctx context.Context, accessToken string, typ string) 
 	)
 	if err := mutex.Lock(); err != nil {
 		// 获取锁失败，在从redis中获取一次
-		result, err := auth.RedisCli.HGetAll(ctx, key).Result()
-		if err != nil {
-			return nil, err
-		}
-		if mapx.IsEmpty(result) {
-			return nil, errors.New("failed to get ticket")
-		}
-		return auth.DecodeGetTicketResp(result), nil
+		return auth.GetTicketRespFromRedis(ctx, key)
 	}
 	defer func(mutex *redsync.Mutex) {
 		_, _ = mutex.Unlock()
@@ -105,17 +98,29 @@ func (auth *SDK) GetTicket(ctx context.Context, accessToken string, typ string) 
 
 func (auth *SDK) SaveGetTicketRespToRedis(ctx context.Context, key string, tokenResp *GetTicketResp) error {
 	data, _ := json.Marshal(tokenResp)
-	expiresIn := tokenResp.ExpiresIn * 2 / 3
-	expiresAt := time.Now().Add(time.Duration(expiresIn) * time.Second)
+	expiresIn := time.Duration(tokenResp.ExpiresIn) * time.Second
+	expiresAt := time.Now().Add(expiresIn * 2 / 3)
 	_, err := auth.RedisCli.HMSet(ctx, key, "resp", string(data), "expires_at", expiresAt.Unix()).Result()
 	if err != nil {
 		return err
 	}
-	_, err = auth.RedisCli.ExpireAt(ctx, key, expiresAt).Result()
+	_, err = auth.RedisCli.Expire(ctx, key, expiresIn).Result()
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (auth *SDK) GetTicketRespFromRedis(ctx context.Context, key string) (*GetTicketResp, error) {
+	// 获取锁失败，在从redis中获取一次
+	result, err := auth.RedisCli.HGetAll(ctx, key).Result()
+	if err != nil {
+		return nil, err
+	}
+	if mapx.IsEmpty(result) {
+		return nil, errors.New("failed to get ticket")
+	}
+	return auth.DecodeGetTicketResp(result), nil
 }
 
 func (auth *SDK) DecodeGetTicketResp(result map[string]string) *GetTicketResp {

@@ -76,14 +76,7 @@ func (auth *SDK) Token(ctx context.Context) (*TokenResp, error) {
 	)
 	if err := mutex.Lock(); err != nil {
 		// 获取锁失败，在从redis中获取一次
-		result, err := auth.RedisCli.HGetAll(ctx, auth.TokenKey).Result()
-		if err != nil {
-			return nil, err
-		}
-		if mapx.IsEmpty(result) {
-			return nil, errors.New("failed to get access token")
-		}
-		return auth.DecodeTokenResp(result), nil
+		return auth.GetTokenRespFromRedis(ctx)
 	}
 	defer func(mutex *redsync.Mutex) {
 		_, _ = mutex.Unlock()
@@ -118,6 +111,17 @@ func (auth *SDK) SaveTokenRespToRedis(ctx context.Context, tokenResp *TokenResp)
 		return err
 	}
 	return nil
+}
+
+func (auth *SDK) GetTokenRespFromRedis(ctx context.Context) (*TokenResp, error) {
+	result, err := auth.RedisCli.HGetAll(ctx, auth.TokenKey).Result()
+	if err != nil {
+		return nil, err
+	}
+	if mapx.IsEmpty(result) {
+		return nil, errors.New("failed to get access token")
+	}
+	return auth.DecodeTokenResp(result), nil
 }
 
 func (auth *SDK) DecodeTokenResp(result map[string]string) *TokenResp {
