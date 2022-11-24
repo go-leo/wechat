@@ -40,7 +40,7 @@ func (sdk *SDK) AccessToken(ctx context.Context, req *AccessTokenReq) (*AccessTo
 		return nil, err
 	}
 	if resp.ErrCode != 0 {
-		err = fmt.Errorf("subscribeMessage.Send error : errcode=%v , errmsg=%v", resp.ErrCode, resp.ErrMsg)
+		err = fmt.Errorf("AccessToken error : errcode=%v , errmsg=%v", resp.ErrCode, resp.ErrMsg)
 		return nil, err
 	}
 	resp.AppID = sdk.AppID

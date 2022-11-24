@@ -32,7 +32,7 @@ func (sdk *SDK) RefreshToken(ctx context.Context, refreshToken string) (*Refresh
 		return nil, err
 	}
 	if resp.ErrCode != 0 {
-		err = fmt.Errorf("subscribeMessage.Send error : errcode=%v , errmsg=%v", resp.ErrCode, resp.ErrMsg)
+		err = fmt.Errorf("RefreshToken error : errcode=%v , errmsg=%v", resp.ErrCode, resp.ErrMsg)
 		return nil, err
 	}
 	resp.AppID = sdk.AppID
