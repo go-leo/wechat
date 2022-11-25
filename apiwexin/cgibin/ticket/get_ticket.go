@@ -84,8 +84,7 @@ func (auth *SDK) GetTicket(ctx context.Context, accessToken string, typ string) 
 	// 获取锁成功, 调微信的接口
 	tokenResp, err := auth.CallGetTicket(ctx, accessToken, typ)
 	if err != nil {
-		auth.Logger.Errorf("failed to get ticket from wechat, %v", err)
-		return auth.DecodeGetTicketResp(result), nil
+		return nil, fmt.Errorf("failed to get ticket from wechat, %v", err)
 	}
 
 	// 保存到redis
@@ -143,7 +142,7 @@ func (auth *SDK) CallGetTicket(ctx context.Context, accessToken string, typ stri
 		return nil, err
 	}
 	if resp.ErrCode != 0 {
-		err = fmt.Errorf("auth.Token error : errcode=%v , errmsg=%v", resp.ErrCode, resp.ErrMsg)
+		err = fmt.Errorf("ticket error : errcode=%v , errmsg=%v", resp.ErrCode, resp.ErrMsg)
 		return nil, err
 	}
 	return &resp, nil

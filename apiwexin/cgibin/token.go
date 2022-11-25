@@ -65,6 +65,7 @@ func (auth *SDK) Token(ctx context.Context) (*TokenResp, error) {
 			return tokenResp, nil
 		}
 	}
+
 	// 从缓存中没有获取到，第一次请求微信获取token
 	// 获取锁
 	mutex := auth.RedisSync.NewMutex(
@@ -85,8 +86,7 @@ func (auth *SDK) Token(ctx context.Context) (*TokenResp, error) {
 	// 获取锁成功, 调微信的接口
 	tokenResp, err := auth.CallToken(ctx)
 	if err != nil {
-		auth.Logger.Errorf("failed to get access token from wechat, %v", err)
-		return auth.DecodeTokenResp(result), nil
+		return nil, fmt.Errorf("failed to get access token from wechat, %v", err)
 	}
 
 	// 保存到redis
